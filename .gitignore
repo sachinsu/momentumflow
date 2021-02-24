@@ -2,3 +2,19 @@
 /.meltano
 .env
 .venv
+
+# Binaries for programs and plugins
+gover/*.exe
+gover/*.exe~
+gover/*.dll
+gover/*.so
+gover/*.dylib
+
+# Test binary, built with `go test -c`
+gover/*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+gover/*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/

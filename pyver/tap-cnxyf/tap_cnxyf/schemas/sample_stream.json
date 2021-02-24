@@ -1,0 +1,11 @@
+{
+    "type": ["null", "object"],
+    "additionalProperties": false,
+    "properties": {
+        "company": {"type": "string"},
+        "symbol": {"type": "string"},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "ltp": {"type": "number"},
+        "yearlyhigh": {"type": "number"}
+    }
+}

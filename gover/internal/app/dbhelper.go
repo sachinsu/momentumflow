@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/jackc/pgx/v4"
 	"golang.org/x/sync/errgroup"
@@ -102,7 +103,7 @@ func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 
 	go func() {
 		for stock := range c {
-			fmt.Printf("Got results %v\n", stock)
+			fmt.Printf("%s\n", stock.Symbol)
 			stocklist = append(stocklist, stock)
 		}
 	}()
@@ -156,7 +157,7 @@ func GetTopStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, "select company,symbol,closer from ( select company,symbol, yearlyhigh-ltp closer from cnx500companies where ltp::money::numeric::float8 > 20 and ltp::money::numeric::float8 < 50000 ) tab order by closer limit 20")
+	rows, err := conn.Query(ctx, "select company,symbol,ltp from ( select company,symbol,ltp, yearlyhigh-ltp closer from cnx500companies where ltp::money::numeric::float8 > 20 and ltp::money::numeric::float8 < 50000 ) tab order by closer limit 20")
 	if err != nil {
 		return stocks, fmt.Errorf("Error fetching top companies %w", err)
 	}
@@ -165,11 +166,16 @@ func GetTopStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
 	for rows.Next() {
 		var company string
 		var symbol string
-		var closer float64
+		var ltp string
 
-		rows.Scan(&company, &symbol, &closer)
+		err := rows.Scan(&company, &symbol, &ltp)
 
-		stocks = append(stocks, Stockdata{Symbol: fmt.Sprintf("%s - (%s)", company, symbol)})
+		if err != nil {
+			return stocks, fmt.Errorf("Error while parsing data from DB %w", err)
+		}
+
+		ltpVal, _ := strconv.ParseFloat(ltp, 32)
+		stocks = append(stocks, Stockdata{Symbol: fmt.Sprintf("%s - (%s)", company, symbol), Ltp: ltpVal})
 
 	}
 

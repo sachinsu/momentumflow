@@ -67,17 +67,21 @@ func run(args []string, stdout io.Writer) error {
 			fmt.Printf("Step 1 Error : %v\n", err)
 			return
 		}
+
+		fmt.Println("Adding Companies to DB..done")
 		err = app.CalculateNearYearlyHigh(ctx, dbconn)
 		if err != nil {
 			fmt.Printf("Step 2 Error : %v\n", err)
 			return
 		}
 
+		fmt.Println("Calculating stockwise Momentum ..done")
 		stocks, err := app.GetTopStocks(ctx, dbconn)
 		if err != nil {
 			fmt.Printf("Step 3 Error : %v\n", err)
 			return
 		} else {
+			fmt.Println("Top 20 Momentum stocks are")
 			for _, v := range stocks {
 				fmt.Printf("%s\n", v.Symbol)
 			}

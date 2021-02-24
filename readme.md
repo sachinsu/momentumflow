@@ -5,7 +5,7 @@ Meltano approach,
 - perform analytics in google sheet to, 
     - Exclude stocks with price < 20 and > 50000 (dbt)
     - Order stocks with least difference between high and LAP (dbt)
-    - Select Top 10  
+    - Select Top 10  z
 
 PGSQL approach,
 - Import NSE CSV file into postgresql (ref: https://dataschool.com/learn-sql/importing-data-from-csv-in-postgresql/)
