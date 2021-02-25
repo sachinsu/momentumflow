@@ -17,6 +17,8 @@ from singer.schema import Schema
 REQUIRED_CONFIG_KEYS = ["cnx500fileurl", "yfinanceurl"]
 LOGGER = singer.get_logger()
 
+CONFIG = {}
+
 
 def get_abs_path(path):
     return os.path.join(os.path.dirname(os.path.realpath(__file__)), path)
@@ -63,7 +65,8 @@ def sync(config, state, catalog):
     """ Sync data from tap source """
     # Loop over selected streams in catalog
     for stream in catalog.get_selected_streams(state):
-        LOGGER.info("Syncing stream:" + stream.tap_stream_id)
+        LOGGER.info("Syncing stream: %s, fields %s",
+                    stream.tap_stream_id, stream.fields())
 
         bookmark_column = stream.replication_key
         is_sorted = True  # TODO: indicate whether data is sorted ascending on bookmark value
@@ -74,8 +77,8 @@ def sync(config, state, catalog):
             key_properties=stream.key_properties,
         )
 
-        cnxurl = config.get("cnx500fileurl")
-        yfurl = config.get("yfinanceurl")
+        cnxurl = CONFIG.get("cnx500fileurl")
+        yfurl = CONFIG.get("yfinanceurl")
 
         max_bookmark = None
         with closing(requests.get(cnxurl, stream=True)) as r:
@@ -116,6 +119,8 @@ def sync(config, state, catalog):
 def main():
     # Parse command line arguments
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
+
+    CONFIG.update(args.config)
 
     # If discover flag was passed, run discovery mode and dump output to stdout
     if args.discover:
