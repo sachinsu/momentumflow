@@ -1,4 +1,4 @@
-# tap-cnxyf
+# tap-momentum
 
 This is a [Singer](https://singer.io) tap that produces JSON-formatted data
 following the [Singer
@@ -13,5 +13,17 @@ This tap:
 - Incrementally pulls data based on the input state
 
 ---
+
+To run, 
+
+* from `/pyver/tap-momentum` folder,
+  * To setup,
+    * run `python3 -m venv .vvenv`
+    * run `source ~/.venv/bin/activate`
+    * run `pip install -e .`
+    
+  * To run,
+    * run `source .venv/bin/activate`
+    * run `tap-momentum -c sample_config.json --catalog  discovery.json`
 
 Copyright &copy; 2018 Stitch

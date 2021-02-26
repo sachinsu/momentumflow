@@ -1,0 +1,62 @@
+{
+  "streams": [
+    {
+      "tap_stream_id": "momentum_stream",
+      "key_properties": [
+        "symbol"
+      ],
+      "schema": {
+        "properties": {
+          "company": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "symbol": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ltp": {
+            "type": [
+              "null",
+              "number"
+            ]
+          },
+          "yearlyhigh": {
+            "type": [
+              "null",
+              "number"
+            ]
+          }
+        },
+        "type": [
+          "null",
+          "object"
+        ],
+        "additionalProperties": false
+      },
+      "stream": "momentum_stream",
+      "metadata": [
+        {
+          "metadata": {
+            "table-key-properties": ["symbol"],
+            "valid-replication-keys": ["timestamp"],
+            "inclusion": "automatic",
+            "selected": true
+          },
+          "breadcrumb": []
+        }
+      ]
+    }
+  ]
+}
