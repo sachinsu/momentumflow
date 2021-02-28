@@ -14,4 +14,4 @@ Approach:
 * Custom tap to get company-wise 52 week high and LTP - done
 * Test this tap with postgreSQL (tap-postgres) 
 * Dbt to arrive at list of momentum stocks
-* meltano to orchestrate
+* (possibly) Airflow to orchestrate on weekly basis
