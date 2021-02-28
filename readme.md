@@ -1,23 +1,17 @@
-Meltano approach, 
+Requirements,
+- This process has to run every week on Weekend (Sat/Sun)
+- download CNX 500 companies from NSE 
+- Get LTP and 52 week high from yahoo finance 
+- Update this data in a storage (DB)
+- Exclude stocks having LTP < 20 & > 50000
+- Check if there are any stocks last week that either less than their 5% of 52-week high or not in top 10 , remove such stocks (mark as 'sell') 
+- Get list of top 10 stocks which are near their 52-week high and add such that total no of stocks remains 10 (mark as 'buy')
 
-- download CNX 500 companies from NSE (meltano) in postgres
-- from postgres table put the company details to a google sheet (meltano)
-- perform analytics in google sheet to, 
-    - Exclude stocks with price < 20 and > 50000 (dbt)
-    - Order stocks with least difference between high and LAP (dbt)
-    - Select Top 10  z
+Approach: 
 
-PGSQL approach,
-- Import NSE CSV file into postgresql (ref: https://dataschool.com/learn-sql/importing-data-from-csv-in-postgresql/)
-- Write stored procedure or python program that, 
-    - download 52 week high (high) , last adjusted price (LAP) for each of these companies using pgsql HTTP Client (https://github.com/pramsey/pgsql-http)
-    - Exclude stocks with price < 20 and > 50000 (dbt)
-    - Order stocks with least difference between high and LAP (dbt)
-    - Select Top 10  
+* Meltano for ELT
 
-    - create table cnx500companies (company varchar(200), industry varchar(25), symbol varchar(25), series varchar(5), Isin varchar(25),ltp money, yearlyhigh money);
-
-    - copy cnx500companies (company,industry,symbol, series,isin)
-       from 'd:\wl-data\projects\momentumflow\ind_nifty500list.csv'
-       delimiter ',' CSV header;
-    - 
+* Custom tap to get company-wise 52 week high and LTP - done
+* Test this tap with postgreSQL (tap-postgres) 
+* Dbt to arrive at list of momentum stocks
+* meltano to orchestrate

@@ -18,12 +18,16 @@ To run,
 
 * from `/pyver/tap-momentum` folder,
   * To setup,
-    * run `python3 -m venv .vvenv`
+    * run `python3 -m venv .venv`
     * run `source ~/.venv/bin/activate`
     * run `pip install -e .`
     
   * To run,
     * run `source .venv/bin/activate`
     * run `tap-momentum -c sample_config.json --catalog  discovery.json`
+
+
+
+
 
 Copyright &copy; 2018 Stitch

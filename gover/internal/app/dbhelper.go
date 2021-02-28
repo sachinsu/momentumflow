@@ -14,7 +14,10 @@ import (
 )
 
 const (
-	maxWorkers = 5
+	maxMomentumStocks = 10
+	lowerLTPLimit     = 20
+	upperLTPLimit     = 50000
+	maxWorkers        = 5
 )
 
 func AddCompaniesToDB(ctx context.Context, dbConn string, filePath string) error {
@@ -59,7 +62,7 @@ func AddCompaniesToDB(ctx context.Context, dbConn string, filePath string) error
 			return fmt.Errorf("failed while parsing CSV %w", err)
 		}
 		// fmt.Printf("%v\n", record)
-		batch.Queue("insert into cnx500companies(company,industry,symbol,series,isin) values($1,$2,$3,$4,$5)", record[0], record[1], record[2], record[3], record[4])
+		batch.Queue("insert into cnx500companies(company,industry,symbol) values($1,$2,$3)", record[0], record[1], record[2])
 
 		if batch.Len()%100 == 0 {
 			br := tx.SendBatch(ctx, batch)
@@ -84,6 +87,7 @@ func AddCompaniesToDB(ctx context.Context, dbConn string, filePath string) error
 
 func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 	var stocklist []Stockdata
+
 	conn, err := pgx.Connect(ctx, dbConn)
 	if err != nil {
 		return fmt.Errorf("Unable to connect to database: %w", err)
@@ -95,6 +99,7 @@ func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 		return fmt.Errorf("Error reading rows from table: %w", err)
 	}
 	defer rows.Close()
+
 	g, ctxNew := errgroup.WithContext(ctx)
 
 	c := make(chan Stockdata)
@@ -148,7 +153,7 @@ func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 	return nil
 }
 
-func GetTopStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
+func GetMomentumStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
 	var stocks []Stockdata
 
 	conn, err := pgx.Connect(ctx, dbConn)
@@ -157,7 +162,42 @@ func GetTopStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
 	}
 	defer conn.Close(ctx)
 
-	rows, err := conn.Query(ctx, "select company,symbol,ltp from ( select company,symbol,ltp, yearlyhigh-ltp closer from cnx500companies where ltp::money::numeric::float8 > 20 and ltp::money::numeric::float8 < 50000 ) tab order by closer limit 20")
+	// Check for stocks whether they continue to be 'buy'
+	_, err = conn.Exec(ctx, `insert into momentumstocks(company,symbol,ltp,buyorsell) select company,symbol,ltp,'buy' from cnx500companies  where exists
+	(select symbol from momentumstocks where buyorsell=$1 and symbol=cnx500companies.symbol order by updatedat desc limit $2) and yearlyhigh-ltp < (5/100*yearlyhigh) 
+	and  exists (select symbol from cnx500companies where symbol=cnx500companies.symbol order by yearlyhigh-ltp limit $2)`, "buy", maxMomentumStocks)
+
+	if err != nil {
+		return stocks, fmt.Errorf("Error inserting top companies %w", err)
+	}
+
+	tag, err := conn.Exec(ctx, ` insert into momentumstocks(company,symbol,ltp,buyorsell)
+	select company,symbol,ltp,'buy'
+	from cnx500companies 
+	where not exists (select symbol 
+			  from momentumstocks 
+			  where buyorsell=$1 and updatedat=current_date)
+	and ltp::money::numeric::float8 > $2 and ltp::money::numeric::float8 < $3
+	order by yearlyhigh-ltp 
+	limit (select $4-count(*) from momentumstocks where buyorsell=$1 and updatedat=current_date)
+  `, "buy", lowerLTPLimit, upperLTPLimit, maxMomentumStocks)
+
+	if err != nil {
+		return stocks, fmt.Errorf("Error inserting top companies %w", err)
+	}
+
+	if tag.RowsAffected() < 1 {
+		return stocks, fmt.Errorf("Unable to determine top n records")
+	}
+	// remove stocks if,
+	// it is not in top 10 of this week or
+	// it > 5% than their 52 week high
+
+	rows, err := conn.Query(ctx, `select company,symbol,ltp,buyorsell 
+								from momentumstocks
+								where updatedat >= (select updatedat 
+								from momentumstocks
+								order by updatedat desc limit 1)`)
 	if err != nil {
 		return stocks, fmt.Errorf("Error fetching top companies %w", err)
 	}
@@ -167,15 +207,16 @@ func GetTopStocks(ctx context.Context, dbConn string) ([]Stockdata, error) {
 		var company string
 		var symbol string
 		var ltp string
+		var buyorsell string
 
-		err := rows.Scan(&company, &symbol, &ltp)
+		err := rows.Scan(&company, &symbol, &ltp, &buyorsell)
 
 		if err != nil {
 			return stocks, fmt.Errorf("Error while parsing data from DB %w", err)
 		}
 
 		ltpVal, _ := strconv.ParseFloat(ltp, 32)
-		stocks = append(stocks, Stockdata{Symbol: fmt.Sprintf("%s - (%s)", company, symbol), Ltp: ltpVal})
+		stocks = append(stocks, Stockdata{Symbol: fmt.Sprintf("%s - (%s) - (%s)", company, symbol, buyorsell), Ltp: ltpVal})
 
 	}
 

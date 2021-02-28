@@ -33,7 +33,7 @@ func run(args []string, stdout io.Writer) error {
 
 	var importfilepath string
 
-	flags.StringVar(&importfilepath, "importfile", "D:\\WL-DATA\\projects\\momentumflow\\ind_nifty500list.csv", "Absolute path of file to be imported")
+	flags.StringVar(&importfilepath, "importfile", "/mnt/c/Users/sachi/projects/self/momentumflow/ind_nifty500list.csv", "Absolute path of file to be imported")
 
 	// cpuprofile := flags.String("cpuprofile", "", "write cpu profile to file")
 
@@ -62,21 +62,21 @@ func run(args []string, stdout io.Writer) error {
 	go func() {
 		dbconn := "host=127.0.0.1 port=5432 user=momentumflow password=momentumflow dbname=momentumflow sslmode=disable"
 
-		err := app.AddCompaniesToDB(ctx, dbconn, importfilepath)
-		if err != nil {
-			fmt.Printf("Step 1 Error : %v\n", err)
-			return
-		}
+		// err := app.AddCompaniesToDB(ctx, dbconn, importfilepath)
+		// if err != nil {
+		// 	fmt.Printf("Step 1 Error : %v\n", err)
+		// 	return
+		// }
 
-		fmt.Println("Adding Companies to DB..done")
-		err = app.CalculateNearYearlyHigh(ctx, dbconn)
-		if err != nil {
-			fmt.Printf("Step 2 Error : %v\n", err)
-			return
-		}
+		// fmt.Println("Adding Companies to DB..done")
+		// err = app.CalculateNearYearlyHigh(ctx, dbconn)
+		// if err != nil {
+		// 	fmt.Printf("Step 2 Error : %v\n", err)
+		// 	return
+		// }
 
 		fmt.Println("Calculating stockwise Momentum ..done")
-		stocks, err := app.GetTopStocks(ctx, dbconn)
+		stocks, err := app.GetMomentumStocks(ctx, dbconn)
 		if err != nil {
 			fmt.Printf("Step 3 Error : %v\n", err)
 			return
