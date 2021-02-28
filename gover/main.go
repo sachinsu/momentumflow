@@ -62,18 +62,18 @@ func run(args []string, stdout io.Writer) error {
 	go func() {
 		dbconn := "host=127.0.0.1 port=5432 user=momentumflow password=momentumflow dbname=momentumflow sslmode=disable"
 
-		// err := app.AddCompaniesToDB(ctx, dbconn, importfilepath)
-		// if err != nil {
-		// 	fmt.Printf("Step 1 Error : %v\n", err)
-		// 	return
-		// }
+		err := app.AddCompaniesToDB(ctx, dbconn, importfilepath)
+		if err != nil {
+			fmt.Printf("Step 1 Error : %v\n", err)
+			return
+		}
 
-		// fmt.Println("Adding Companies to DB..done")
-		// err = app.CalculateNearYearlyHigh(ctx, dbconn)
-		// if err != nil {
-		// 	fmt.Printf("Step 2 Error : %v\n", err)
-		// 	return
-		// }
+		fmt.Println("Adding Companies to DB..done")
+		err = app.CalculateNearYearlyHigh(ctx, dbconn)
+		if err != nil {
+			fmt.Printf("Step 2 Error : %v\n", err)
+			return
+		}
 
 		fmt.Println("Calculating stockwise Momentum ..done")
 		stocks, err := app.GetMomentumStocks(ctx, dbconn)
