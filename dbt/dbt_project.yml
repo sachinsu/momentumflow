@@ -34,5 +34,6 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   momentumflow:
       # Applies to all files under models/example/
+      +materialized: table
       example:
           materialized: view

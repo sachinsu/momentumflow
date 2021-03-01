@@ -2,7 +2,9 @@ package app
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -13,6 +15,23 @@ type Stockdata struct {
 	Symbol     string
 	Ltp        float64
 	YearlyHigh float64
+}
+
+func readCSVFromUrl(url string) ([][]string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	reader := csv.NewReader(resp.Body)
+	reader.Comma = ','
+	data, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }
 
 // GetStockData - parses stock data for symbol from yahoo finance

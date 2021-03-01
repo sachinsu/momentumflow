@@ -33,7 +33,7 @@ func run(args []string, stdout io.Writer) error {
 
 	var importfilepath string
 
-	flags.StringVar(&importfilepath, "importfile", "/mnt/c/Users/sachi/projects/self/momentumflow/ind_nifty500list.csv", "Absolute path of file to be imported")
+	flags.StringVar(&importfilepath, "importfile", "https://www1.nseindia.com/content/indices/ind_nifty500list.csv", "URL of file containing list of stocks in index")
 
 	// cpuprofile := flags.String("cpuprofile", "", "write cpu profile to file")
 

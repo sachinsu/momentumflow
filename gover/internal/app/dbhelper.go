@@ -2,10 +2,7 @@ package app
 
 import (
 	"context"
-	"encoding/csv"
 	"fmt"
-	"io"
-	"os"
 	"strconv"
 
 	"github.com/jackc/pgx/v4"
@@ -27,12 +24,15 @@ func AddCompaniesToDB(ctx context.Context, dbConn string, filePath string) error
 	}
 	defer conn.Close(ctx)
 
-	file, err := os.Open(filePath)
+	records, err := readCSVFromUrl(filePath)
+
 	if err != nil {
 		return fmt.Errorf("failed to read the file: %w", err)
 	}
 
-	defer file.Close()
+	// file, err := os.Open(filePath)
+
+	// defer file.Close()
 
 	tx, err := conn.Begin(ctx)
 	if err != nil {
@@ -50,18 +50,15 @@ func AddCompaniesToDB(ctx context.Context, dbConn string, filePath string) error
 
 	batch.Queue("delete from cnx500companies")
 
-	r := csv.NewReader(file)
-	r.Read()
+	// r := csv.NewReader(file)
+	// r.Read()
 
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
+	for idx, record := range records {
+		if idx == 0 {
+			continue
 		}
-		if err != nil {
-			return fmt.Errorf("failed while parsing CSV %w", err)
-		}
-		// fmt.Printf("%v\n", record)
+
+		// fmt.Printf("%v--%d\n", record, len(record[0]))
 		batch.Queue("insert into cnx500companies(company,industry,symbol) values($1,$2,$3)", record[0], record[1], record[2])
 
 		if batch.Len()%100 == 0 {
@@ -116,6 +113,12 @@ func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 	for rows.Next() {
 		var symbol string
 		rows.Scan(&symbol)
+
+		if rows.Err() != nil {
+			return rows.Err()
+		}
+
+		// fmt.Println(symbol)
 		if err := sem.Acquire(ctx, 1); err != nil {
 			return err
 		}
@@ -128,13 +131,14 @@ func CalculateNearYearlyHigh(ctx context.Context, dbConn string) error {
 		// stocklist = append(stocklist, stock)
 
 		g.Go(func() (err error) {
+			Symbol := symbol
 			defer sem.Release(1)
 
-			stock, err := GetStockData(ctxNew, symbol+".NS")
+			stock, err := GetStockData(ctxNew, Symbol+".NS")
 			if err != nil {
 				return err
 			}
-			stock.Symbol = symbol
+			stock.Symbol = Symbol
 			c <- stock
 			// fmt.Printf("%s done\n", symbol)
 			return err

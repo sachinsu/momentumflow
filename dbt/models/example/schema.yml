@@ -2,6 +2,14 @@
 version: 2
 
 models:
+    - name: momentumstocks
+      description: "model to get top 20 momentum stocks"
+      columns:
+          - name: symbol
+            description: "The primary key for this table"
+            tests:
+                - unique
+                - not_null
     - name: my_first_dbt_model
       description: "A starter dbt model"
       columns:
