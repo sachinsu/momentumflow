@@ -1,0 +1,49 @@
+version: 2
+
+sources:
+  - name: datastore
+    schema: public
+    database: momentumflow
+    description: Set of CNX 500 companies from NSE 
+    tables:
+      - name: cnx500companies
+        columns:
+          - name: symbol
+            description: Primary key of the table
+            tests:
+              - unique
+              - not_null
+          - name: company
+            description: company name
+            tests:
+              - not_null
+          - name: ltp
+            description: last price as on date 
+          - name: yearlyhigh
+            description: 52 week high as off date 
+          - name: updatedat
+            description: data as on date
+
+models:
+  - name: weeklylist
+    columns:
+      - name: symbol
+        tests:
+          - not_null
+      - name: company
+        tests:
+          - not_null
+      - name: ltp
+        tests:
+          - not_null
+      - name: yearlyhigh
+        tests:
+          - not_null
+      - name: updatedat
+        tests:
+          - not_null
+      - name: buyorsell
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['buy', 'sell']

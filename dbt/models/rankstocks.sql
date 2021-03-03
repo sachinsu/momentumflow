@@ -1,3 +1,9 @@
+{{
+    config(
+        materialized='incremental',
+    )
+}}
+
 with
     cnxcompanies
     as
@@ -8,14 +14,13 @@ with
             company,
             ltp,
             yearlyhigh,
-            updatedat
-
-        from cnx500companies
+            updatedat,
+            rank() over (order by yearlyhigh-ltp) as diff_rank
+        from {{ source('datastore', 'cnx500companies') }}
     where yearlyhigh::money::numeric::float8 - ltp::money::numeric::float8 > 0 and ltp::money::numeric::float8 > 20 and ltp::money::numeric::float8 < 50000
 
 ),
-
-cnxtopstocks as
+ cnxtopstocks as
 (
 
     select
@@ -24,11 +29,9 @@ cnxtopstocks as
     ltp,
     yearlyhigh,
     updatedat,
-    'buy' as buyorsell
-from cnxcompanies
-order by yearlyhigh-ltp 
-    limit 20
-
+    diff_rank
+    from  cnxcompanies
+    order by updatedat desc,diff_rank 
 )
 
 select * from cnxtopstocks
