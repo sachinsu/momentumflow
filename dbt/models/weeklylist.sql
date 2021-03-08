@@ -12,6 +12,7 @@ with currentlist as (
             yearlyhigh,
             updatedat,diff_rank,'buy' as buyorsell
     from  {{ref('rankstocks')}} 
+    where (yearlyhigh-ltp)/ltp*100 <= 5
     order by updatedat desc, diff_rank
     limit 20
 ),
@@ -22,7 +23,7 @@ finallist as (
             ltp,
             yearlyhigh,
             updatedat,diff_rank,'sell' as buyorsell from {{this}} as oldlist
-            where not exists (select symbol from currentlist where symbol=oldlist.symbol)
+            where not exists (select symbol from currentlist where symbol=oldlist.symbol and (yearlyhigh-ltp)/ltp*100 <= 5 )
         union 
         select  symbol,
             company,
