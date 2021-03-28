@@ -15,6 +15,19 @@ import yfinance as yf
 # 3. Rebalance every month
 
 
+def getannualvolatility(symbol):
+    tracker = yf.Ticker(symbol+".NS")
+    hist = tracker.history(period="1y")
+
+    # Compute the logarithmic returns using the Closing price
+    hist['Log_Ret'] = np.log(hist['Close'] / hist['Close'].shift(1))
+
+    # Compute Volatility using the pandas rolling standard deviation function
+    annualvolatility = hist.std()["Log_Ret"] * np.sqrt(252)
+
+    return annualvolatility
+
+
 symbolList = {}
 nse = Nse()
 
@@ -49,14 +62,3 @@ for i in orderedList[:30]:
     # STEP 4: Divide Absolutereturns by Annual Volatility
 
 
-def getannualvolatility(symbol):
-    tracker = yf.Ticker(symbol+".NS")
-    hist = tracker.history(period="1y")
-
-    # Compute the logarithmic returns using the Closing price
-    hist['Log_Ret'] = np.log(hist['Close'] / hist['Close'].shift(1))
-
-    # Compute Volatility using the pandas rolling standard deviation function
-    annualvolatility = hist.std()["Log_Ret"] * np.sqrt(252)
-
-    return annualvolatility
